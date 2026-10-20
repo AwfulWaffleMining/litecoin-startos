@@ -11,7 +11,7 @@ ARG LITECOIN_SHA256_X86_64
 ARG LITECOIN_SHA256_AARCH64
 ARG LITECOIN_SHA256_RISCV64
 
-FROM debian:bookworm-slim AS fetch
+FROM debian:trixie-slim AS fetch
 ARG LITECOIN_VERSION
 ARG LITECOIN_SHA256_X86_64
 ARG LITECOIN_SHA256_AARCH64
@@ -55,8 +55,15 @@ RUN set -eu; \
 # litecoind links nothing beyond glibc, libstdc++'s runtime bits and libm —
 # verified with ldd against the 0.21.5.8 release, highest symbol requirement
 # GLIBC_2.16 — so there is no lib/ directory to carry across from the tarball
-# the way some Core forks need.
-FROM debian:bookworm-slim
+# the way some Core forks need. Any glibc newer than that works.
+#
+# TRIXIE, NOT BOOKWORM, and that is load-bearing: riscv64 only became an
+# official Debian architecture in Debian 13, so `debian:bookworm-slim`
+# publishes no linux/riscv64 image and `make riscv` fails at the FROM line.
+# bookworm covers amd64, arm32v5, arm32v7, arm64v8, i386, mips64le, ppc64le
+# and s390x; trixie trades mips64le for riscv64. Do not "stabilise" this back
+# to bookworm without dropping riscv64 from the manifest and the Makefile.
+FROM debian:trixie-slim
 RUN apt-get update \
  && apt-get install -y --no-install-recommends ca-certificates \
  && rm -rf /var/lib/apt/lists/*
