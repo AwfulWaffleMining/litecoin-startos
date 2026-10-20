@@ -1,0 +1,25 @@
+name: Build
+
+# Produces the .s9pk as a CI artifact. Run it from the Actions tab
+# ("Build" -> "Run workflow") and download the artifact from the run summary;
+# that file is what sideloads into StartOS.
+#
+# Requires the DEV_KEY repository secret, the same one the other packages in
+# this account use.
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths-ignore: ['*.md']
+    branches: ['main']
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    if: github.event.pull_request.draft == false
+    uses: Start9Labs/start-technologies/.github/workflows/build.yml@master
+    secrets:
+      DEV_KEY: ${{ secrets.DEV_KEY }}
